@@ -37,4 +37,6 @@ RUN set -ex \
 EXPOSE 80
 EXPOSE 443
 
+VOLUME /etc/letsencrypt /var/lib/letsencrypt
+
 ENTRYPOINT ["/entrypoint.sh"]
