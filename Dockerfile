@@ -10,6 +10,7 @@ RUN set -ex \
                augeas-libs \
                libffi \
                libssl1.0 \
+               wget \
                ca-certificates \
                binutils \
     && apk add --no-progress --virtual .build-deps \
