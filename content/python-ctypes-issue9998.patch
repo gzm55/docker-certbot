@@ -1,47 +1,36 @@
 --- /usr/local/lib/python2.7/ctypes/util.py
 +++ /usr/local/lib/python2.7/ctypes/util.py
-@@ -86,29 +86,24 @@
- 
- elif os.name == "posix":
-     # Andreas Degert's find functions, using gcc, /sbin/ldconfig, objdump
--    import re, tempfile, errno
-+    import re
- 
-     def _findLib_gcc(name):
-+        # Use ld instead of gcc. See comment for Issue #11959.
-         expr = r'[^\(\)\s]*lib%s\.[^\(\)\s]*' % re.escape(name)
--        fdout, ccout = tempfile.mkstemp()
--        os.close(fdout)
--        cmd = 'if type gcc >/dev/null 2>&1; then CC=gcc; elif type cc >/dev/null 2>&1; then CC=cc;else exit 10; fi;' \
--              'LANG=C LC_ALL=C $CC -Wl,-t -o ' + ccout + ' 2>&1 -l' + name
--        try:
--            f = os.popen(cmd)
--            try:
--                trace = f.read()
--            finally:
--                rv = f.close()
--        finally:
--            try:
--                os.unlink(ccout)
--            except OSError, e:
--                if e.errno != errno.ENOENT:
--                    raise
--        if rv == 10:
--            raise OSError, 'gcc or cc command not found'
--        res = re.search(expr, trace)
-+        cmd = ['ld', '-t']
-+        libpath = os.environ.get('LD_LIBRARY_PATH')
-+        if libpath:
-+            for d in libpath.split(':'):
-+                cmd.extend(['-L', d])
-+        cmd.extend(['-o', os.devnull, '-l%s' % name])
-+        import subprocess
-+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-+                             stderr=subprocess.PIPE, env=os.environ)
-+        out, _ = p.communicate()
-+        import locale
-+        encoding = locale.getpreferredencoding()
-+        res = re.search(expr, out.decode(encoding))
-         if not res:
-             return None
-         return res.group(0)
+@@ -270,8 +270,32 @@
+                 return None
+             return res.group(1)
+
++        def _findLib_ld(name):
++            # See issue #9998 for why this is needed
++            expr = r'[^\(\)\s]*lib%s\.[^\(\)\s]*' % re.escape(name)
++            cmd = ['ld', '-t']
++            libpath = os.environ.get('LD_LIBRARY_PATH')
++            if libpath:
++                for d in libpath.split(':'):
++                    cmd.extend(['-L', d])
++            cmd.extend(['-o', os.devnull, '-l%s' % name])
++            result = None
++            try:
++                p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
++                                     stderr=subprocess.PIPE,
++                                     universal_newlines=True)
++                out, _ = p.communicate()
++                res = re.search(expr, os.fsdecode(out))
++                if res:
++                    result = res.group(0)
++            except Exception as e:
++                pass  # result will be None
++            return result
++
+         def find_library(name):
+-            return _findSoname_ldconfig(name) or _get_soname(_findLib_gcc(name))
++            # See issue #9998
++            return _findSoname_ldconfig(name) or \
++                   _get_soname(_findLib_gcc(name) or _findLib_ld(name))
+
+ ################################################################
+ # test code

@@ -5,7 +5,7 @@ COPY content /
 
 RUN set -ex \
     && apk update \
-    && apk add --no-progress --virtual .letsencrypt-rundeps \
+    && apk add --no-progress --virtual .certbot-rundeps \
                dialog \
                augeas-libs \
                libffi \
@@ -19,9 +19,9 @@ RUN set -ex \
                openssl-dev \
                musl-dev \
                libffi-dev \
-    && wget -qO- https://raw.githubusercontent.com/certbot/certbot/master/letsencrypt-auto \
-       | grep -v ' rm -rf .*VENV_PATH' \
-       | grep -v 'VENV_BIN/python.*pipstrap.py' \
+    && wget -qO- https://raw.githubusercontent.com/certbot/certbot/master/certbot-auto \
+       | grep -v 'rm -rf .*VENV_PATH' \
+       | grep -v 'VENV_BIN/python.*pipstrap\.py' \
        | sed '1avirtualenv() { :; }' \
        | sed '/Installation succeeded/aexit 0' \
        | VENV_PATH=/usr/local /bin/sh -s -- --le-auto-phase2 --no-self-upgrade \
