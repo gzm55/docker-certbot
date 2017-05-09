@@ -33,7 +33,7 @@ RUN set -ex \
           -o \
           \( -type f -a -name '*.pyc' -o -name '*.pyo' \) \
        \) -exec rm -rf '{}' + \
-    && rm -rf ~/.cache /var/cache/apk/* /tmp/* /*.patch
+    && rm -rf ~/.cache ~/.wget-hsts /var/cache/apk/* /tmp/* /*.patch
 
 EXPOSE 80
 EXPOSE 443
