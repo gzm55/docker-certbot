@@ -13,6 +13,7 @@ RUN set -ex \
                wget \
                ca-certificates \
                binutils \
+               openssl \
     && apk add --no-progress --virtual .build-deps \
                gcc \
                linux-headers \
