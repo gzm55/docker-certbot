@@ -7,12 +7,9 @@ RUN set -ex \
     && grep -q @edgecommunity /etc/apk/repositories || echo '@edgecommunity http://nl.alpinelinux.org/alpine/edge/community' >> /etc/apk/repositories \
     && apk update \
     && apk upgrade \
-    && apk add certbot@edgecommunity openssl \
-    && apk add --no-progress --virtual .certbot-rundeps \
-               ca-certificates \
-               binutils \
+    && apk add --no-progress certbot@edgecommunity openssl ca-certificates \
     && apk add py2-pip \
-    ## certbot require idna<2.7
+    ## certbot 0.26 require idna<2.7
     && pip install 'idna<2.7' \
     && apk del py2-pip \
     && find /usr/lib/python2.7 -depth \
